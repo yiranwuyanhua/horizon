@@ -52,11 +52,11 @@ from horizon.utils import settings as utils_settings
 DEFAULT_PANEL_GROUP = 'default'
 LOG = logging.getLogger(__name__)
 
-
+#输入了2个元素、1个列表、1个字典
 def _decorate_urlconf(urlpatterns, decorator, *args, **kwargs):
     for pattern in urlpatterns:
         if getattr(pattern, 'callback', None):
-            decorated = decorator(pattern.callback, *args, **kwargs)
+            decorated = decorator(pattern.callback, *args, **kwargs)#装饰函数将decorated赋值为装饰器decorator返回的参数，decorator将pattern.callback换成了其他函数
             if django.VERSION >= (1, 10):
                 pattern.callback = decorated
             else:
@@ -66,7 +66,7 @@ def _decorate_urlconf(urlpatterns, decorator, *args, **kwargs):
         if getattr(pattern, 'url_patterns', []):
             _decorate_urlconf(pattern.url_patterns, decorator, *args, **kwargs)
 
-
+# getattr返回第二个元素是否属于第一个
 # FIXME(lhcheng): We need to find a better way to cache the result.
 # Rather than storing it in the session, we could leverage the Django
 # session. Currently, this has been causing issue with cookie backend,
