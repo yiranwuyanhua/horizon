@@ -51,7 +51,7 @@ from horizon import loaders
 DEFAULT_PANEL_GROUP = 'default'
 LOG = logging.getLogger(__name__)
 
-
+#输入了两个数，一个列表，一个字典
 def _decorate_urlconf(urlpatterns, decorator, *args, **kwargs):
     for pattern in urlpatterns:
         if getattr(pattern, 'callback', None):
