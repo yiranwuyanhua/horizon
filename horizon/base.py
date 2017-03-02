@@ -107,7 +107,7 @@ class HorizonComponent(object):
         return name
 
     def _get_default_urlpatterns(self):
-        package_string = '.'.join(self.__module__.split('.')[:-1])
+        package_string = '.'.join(self.__module__.split('.')[:-1])#先通过split将module进行分割，再通过join进行合并，[:-1]去除最后一个字符
         if getattr(self, 'urls', None):
             try:
                 mod = import_module('.%s' % self.urls, package_string)
@@ -115,7 +115,7 @@ class HorizonComponent(object):
                 mod = import_module(self.urls)
             urlpatterns = mod.urlpatterns
         else:
-            # Try importing a urls.py from the dashboard package
+            # Try importing a urls.py from the dashboard package  从dashboard包导入urls.py
             if module_has_submodule(import_module(package_string), 'urls'):
                 urls_mod = import_module('.urls', package_string)
                 urlpatterns = urls_mod.urlpatterns
@@ -127,6 +127,7 @@ class HorizonComponent(object):
     # a better implementation has been figured out. This has been causing
     # issue with cookie backend, adding 1600+ in the cookie size.
     # @access_cached
+    #返回用户是否具有基于角色的对该组件的访问权限。这种方法是不能被重写。该方法的结果存储在每个会话缓存中。
     def can_access(self, context):
         """Return whether the user has role based access to this component.
 
@@ -135,6 +136,7 @@ class HorizonComponent(object):
         """
         return self.allowed(context)
 
+    #检查组件是否允许用户访问，当需要进行更复杂的检查时，需要被重写
     def allowed(self, context):
         """Checks if the user is allowed to access this component.
 
@@ -143,73 +145,63 @@ class HorizonComponent(object):
         when more complex checks are required.
         """
         return self._can_access(context['request'])
-
+    #检查安全权限
     def _can_access(self, request):
-        policy_check = utils_settings.import_setting("POLICY_CHECK_FUNCTION")
-
+        policy_check = utils_settings.import_setting("POLICY_CHECK_FUNCTION")#导入权限检查函数
         # this check is an OR check rather than an AND check that is the
-        # default in the policy engine, so calling each rule individually
+        # default in the policy engine, so calling each rule individually在策略引擎中默认，所以单独调用每个规则
         if policy_check and self.policy_rules:
             for rule in self.policy_rules:
                 rule_param = rule
-                if not any(isinstance(r, (list, tuple)) for r in rule):
+                if not any(isinstance(r, (list, tuple)) for r in rule):#从rule取出所有的元素r，然后判断是不是一个列表或者元组，any为真的情况为非空
                     rule_param = (rule,)
                 if policy_check(rule_param, request):
-                    return True
+                    return True#若存在权限，则返回true
             return False
 
         # default to allowed
-        return True
-
-
+        return True#默认返回true
 class Registry(object):
     def __init__(self):
-        self._registry = {}
-        if not getattr(self, '_registerable_class', None):
+        self._registry = {}#字典
+        if not getattr(self, '_registerable_class', None):#若没有该属性，默认返回None
             raise ImproperlyConfigured('Subclasses of Registry must set a '
-                                       '"_registerable_class" property.')
-
-    def _register(self, cls):
+                                       '"_registerable_class" property.')#抛出异常提示需要设置可注册属性
+    def _register(self, cls):#注册给定类，若指定的类已经注册了，则忽略
         """Registers the given class.
 
         If the specified class is already registered then it is ignored.
         """
         if not inspect.isclass(cls):
-            raise ValueError('Only classes may be registered.')
+            raise ValueError('Only classes may be registered.')#cls必须是类，否则会抛出只有类才能被注册的异常
         elif not issubclass(cls, self._registerable_class):
             raise ValueError('Only %s classes or subclasses may be registered.'
-                             % self._registerable_class.__name__)
-
-        if cls not in self._registry:
-            cls._registered_with = self
-            self._registry[cls] = cls()
-
-        return self._registry[cls]
-
+                             % self._registerable_class.__name__)#cls必须是registerable_class的子类，否则会报出可能已经注册过的异常
+        if cls not in self._registry:#若cls不在self._registry字典中
+            cls._registered_with = self#cls的参数设置为实例对象本身
+            self._registry[cls] = cls()#将cls类增加到字典中
+        return self._registry[cls]#返回处理过后的self._registry[cls]
     def _unregister(self, cls):
         """Unregisters the given class.
 
         If the specified class isn't registered, ``NotRegistered`` will
         be raised.
-        """
+        """#注销给定的类，如果这个指定类未注册，则抛出“未注册”的异常
         if not issubclass(cls, self._registerable_class):
             raise ValueError('Only %s classes or subclasses may be '
-                             'unregistered.' % self._registerable_class)
-
+                             'unregistered.' % self._registerable_class)#如果cls不是可注册的类，则抛出只有_registerable_class中的类可以注册
         if cls not in self._registry.keys():
-            raise NotRegistered('%s is not registered' % cls)
-
-        del self._registry[cls]
-
+            raise NotRegistered('%s is not registered' % cls)#如果cls不在_registry.keys中，则抛出未注册的异常
+        del self._registry[cls]#删除列表中的cls类
         return True
 
     def _registered(self, cls):
         if inspect.isclass(cls) and issubclass(cls, self._registerable_class):
             found = self._registry.get(cls, None)
             if found:
-                return found
+                return found#若字典中有cls对应的元素，则返回该元素；若不存在，则返回None
         else:
-            # Allow for fetching by slugs as well.
+            # Allow for fetching by slugs as well.通过字典的结果元素取对应的元素
             for registered in self._registry.values():
                 if registered.slug == cls:
                     return registered
@@ -221,14 +213,12 @@ class Registry(object):
                                 % {"type": class_name,
                                    "slug": cls,
                                    "parent": parent,
-                                   "name": self.slug})
+                                   "name": self.slug})#若它本身有_registered_with属性，则输出cls未用它的父类注册
         else:
             slug = getattr(cls, "slug", cls)
             raise NotRegistered('%(type)s with slug "%(slug)s" is not '
                                 'registered.' % {"type": class_name,
-                                                 "slug": slug})
-
-
+                                                 "slug": slug})#若不存在，则抛出未注册的异常
 class Panel(HorizonComponent):
     """A base class for defining Horizon dashboard panels.
 
