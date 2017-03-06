@@ -360,6 +360,7 @@ class PanelGroup(object):
 
 
 class Dashboard(Registry, HorizonComponent):
+    #定义dashboard的父类，所有的类都需要从该父类继承
     """A base class for defining Horizon dashboards.
 
     All Horizon dashboards should extend from this base class. It provides the
@@ -572,13 +573,14 @@ class Dashboard(Registry, HorizonComponent):
                 panel_group = PanelGroup(self, panels=panel_set)
 
             # Put our results into their appropriate places
-            panels_to_discover.extend(panel_group.panels)
-            panel_groups.append((panel_group.slug, panel_group))
-            if panel_group.slug == DEFAULT_PANEL_GROUP:
+            panels_to_discover.extend(panel_group.panels)#将元素添加到pannels_to_discover的末尾，如果还是列表，则将其中的元素添加进去
+            panel_groups.append((panel_group.slug, panel_group))#在末尾添加新对象，若还是列表，则不将列表元素拆开，而是整个列表添加进去
+            if panel_group.slug == DEFAULT_PANEL_GROUP:#若使用的是default容器组，那么显示default容器组创建成功
                 default_created = True
 
         # Plugin panels can be added to a default panel group. Make sure such a
         # default group exists.
+        #插件面板可以被插入到默认面板组。先确定这个默认面板组存在
         if not default_created:
             default_group = PanelGroup(self)
             panel_groups.insert(0, (default_group.slug, default_group))
