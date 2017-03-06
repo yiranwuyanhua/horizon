@@ -360,7 +360,10 @@ class PanelGroup(object):
 
 
 class Dashboard(Registry, HorizonComponent):
-    #定义dashboard的父类，所有的类都需要从该父类继承
+    #定义dashboard的父类，所有的类都需要从该父类继承。name dashboard的名称，slug dashboard的短名称，通常被用作URL的一部分，panels 可以是一个包含
+    #panel的列表，或者一个包含PanelGroup的列表 注意:需要向模块一样被加载，而不是直接使用它的名字 default_panel：默认被加载的panel，如我们刚打开
+    #root登录的URL时显示的画面  permissions：一个保存权限的列表，用户需要拥有所有权限才能获得该dashboard的使用权 urls：一个可选择的urlconf路径
+    #nav    method:: nav(context)：决定dashboard是否出现在自动创建的导航中  public：决定该dashboard是否可以不登录就显示
     """A base class for defining Horizon dashboards.
 
     All Horizon dashboards should extend from this base class. It provides the
@@ -444,6 +447,10 @@ class Dashboard(Registry, HorizonComponent):
         without being logged in. Defaults to ``False``.
 
     """
+    #name dashboard的名称，slug dashboard的短名称，通常被用作URL的一部分，panels 可以是一个包含
+    #panel的列表，或者一个包含PanelGroup的列表 注意:需要向模块一样被加载，而不是直接使用它的名字 default_panel：默认被加载的panel，如我们刚打开
+    #root登录的URL时显示的画面  permissions：一个保存权限的列表，用户需要拥有所有权限才能获得该dashboard的使用权 urls：一个可选择的urlconf路径
+    #nav    method:: nav(context)：决定dashboard是否出现在自动创建的导航中  public：决定该dashboard是否可以不登录就显示
     _registerable_class = Panel
     name = ''
     slug = ''
@@ -452,20 +459,21 @@ class Dashboard(Registry, HorizonComponent):
     default_panel = None
     nav = True
     public = False
-
+    #返回slug
     def __repr__(self):
         return "<Dashboard: %s>" % self.slug
-
+    #初始化
     def __init__(self, *args, **kwargs):
+        #*args接受元组类参数，**kwargs接受字典类参数
         super(Dashboard, self).__init__(*args, **kwargs)
         self._panel_groups = None
-
+    #返回特定的在dashboard上注册过的panel
     def get_panel(self, panel):
         """Returns the specified :class:`~horizon.Panel` instance registered
         with this dashboard.
         """
         return self._registered(panel)
-
+    #按次序返回该dashboard上panel类中的所有已经注册过的实例（panel group会被拆开）
     def get_panels(self):
         """Returns the :class:`~horizon.Panel` instances registered with this
         dashboard in order, without any panel groupings.
@@ -475,34 +483,32 @@ class Dashboard(Registry, HorizonComponent):
         for panel_group in panel_groups.values():
             all_panels.extend(panel_group)
         return all_panels
-
+    #返回特定的panel group，若该panel group未注册则返回None
     def get_panel_group(self, slug):
         """Returns the specified :class:~horizon.PanelGroup
         or None if not registered
         """
         return self._panel_groups.get(slug)
-
+    #copy.copy:浅拷贝，若改编copy后的对象，原对象也会被改变
     def get_panel_groups(self):
         registered = copy.copy(self._registry)
         panel_groups = []
 
-        # Gather our known panels
+        # Gather our known panels收集我们已知的panel，移除了所有已知的panelgroup
         if self._panel_groups is not None:
             for panel_group in self._panel_groups.values():
                 for panel in panel_group:
-                    registered.pop(panel.__class__)
-                panel_groups.append((panel_group.slug, panel_group))
-
+                    registered.pop(panel.__class__)#移除列表的最后一个对象并返回
+                panel_groups.append((panel_group.slug, panel_group))#append在列表尾部增加一个元组
         # Deal with leftovers (such as add-on registrations)
-        if len(registered):
+        if len(registered):#len（）返回列表元素个数
             slugs = [panel.slug for panel in registered.values()]
             new_group = PanelGroup(self,
                                    slug="other",
                                    name=_("Other"),
                                    panels=slugs)
             panel_groups.append((new_group.slug, new_group))
-        return collections.OrderedDict(panel_groups)
-
+        return collections.OrderedDict(panel_groups)#OrderedDict有序字典
     def get_absolute_url(self):
         """Returns the default URL for this dashboard.
 
