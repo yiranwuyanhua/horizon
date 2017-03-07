@@ -605,25 +605,25 @@ class Dashboard(Registry, HorizonComponent):
                     raise
         self._autodiscover_complete = True
 
-    @classmethod
+    @classmethod#类方法
     def register(cls, panel):
-        """Registers a :class:`~horizon.Panel` with this dashboard."""
+        """Registers a :class:`~horizon.Panel` with this dashboard."""#通过这个dashboard来注册一个panel
         panel_class = Horizon.register_panel(cls, panel)
-        # Support template loading from panel template directories.
+        # Support template loading from panel template directories.支持从模版目录来加载模版
         panel_mod = import_module(panel.__module__)
-        panel_dir = os.path.dirname(panel_mod.__file__)
-        template_dir = os.path.join(panel_dir, "templates")
-        if os.path.exists(template_dir):
-            key = os.path.join(cls.slug, panel.slug)
+        panel_dir = os.path.dirname(panel_mod.__file__)#返回脚本的相对路径
+        template_dir = os.path.join(panel_dir, "templates")#把panel_dir和templates合成一个路径
+        if os.path.exists(template_dir):#路径存在则返回true，路径损坏返回false
+            key = os.path.join(cls.slug, panel.slug)#将cls路径和panel路径合成一个路径
             loaders.panel_template_dirs[key] = template_dir
         return panel_class
 
     @classmethod
     def unregister(cls, panel):
-        """Unregisters a :class:`~horizon.Panel` from this dashboard."""
+        """Unregisters a :class:`~horizon.Panel` from this dashboard."""#从该dashboard去除注册一个panel
         success = Horizon.unregister_panel(cls, panel)
         if success:
-            # Remove the panel's template directory.
+            # Remove the panel's template directory.移除panel的模版目录
             key = os.path.join(cls.slug, panel.slug)
             if key in loaders.panel_template_dirs:
                 del loaders.panel_template_dirs[key]
