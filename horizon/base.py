@@ -629,7 +629,8 @@ class Dashboard(Registry, HorizonComponent):
                 del loaders.panel_template_dirs[key]
         return success
 
-    def allowed(self, context):
+    def allowed(self, context):#检查不同对象是否有访问该dashboard的权限。检查dashboard上的所有panel和它本身的权限，当需要进行更加复杂的检查，该
+        #方法需要被重写
         """Checks for role based access for this dashboard.
 
         Checks for access to any panels in the dashboard and of the
