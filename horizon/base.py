@@ -802,14 +802,13 @@ class Site(Registry, HorizonComponent):
                 if '/' in user_home:
                     return user_home
                 else:
-                    mod, func = user_home.rsplit(".", 1)
+                    mod, func = user_home.rsplit(".", 1)#从右向左以.为分隔符，分割一次
                     return getattr(import_module(mod), func)(user)
-            # If it's not callable and not a string, it's wrong.
+            # If it's not callable and not a string, it's wrong. 以上情况都不是，则返回异常
             raise ValueError('The user_home setting must be either a string '
                              'or a callable object (e.g. a function).')
         else:
-            return self.get_absolute_url()
-
+            return self.get_absolute_url() #返回绝对URL
     def get_absolute_url(self):
         """Returns the default URL for Horizon's URLconf.
 
