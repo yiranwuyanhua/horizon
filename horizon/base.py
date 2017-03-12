@@ -659,7 +659,7 @@ class Workflow(object):
     pass
 
 
-class LazyURLPattern(SimpleLazyObject):
+class LazyURLPattern(SimpleLazyObject):#动态延迟加载，当需要使用到该类的实例时再加载
     def __iter__(self):
         if self._wrapped is empty:
             self._setup()
@@ -681,10 +681,10 @@ class LazyURLPattern(SimpleLazyObject):
         return self._wrapped[idx]
 
 
-class Site(Registry, HorizonComponent):
+class Site(Registry, HorizonComponent):#最重要的类。包含了所有的dashboard和panel
     """The overarching class which encompasses all dashboards and panels."""
 
-    # Required for registry
+    # Required for registry需要注册
     _registerable_class = Dashboard
 
     name = "Horizon"
@@ -692,33 +692,33 @@ class Site(Registry, HorizonComponent):
     slug = 'horizon'
     urls = 'horizon.site_urls'
 
-    def __repr__(self):
+    def __repr__(self):#返回slug
         return u"<Site: %s>" % self.slug
 
     @property
-    def _conf(self):
+    def _conf(self):#返回conf
         return conf.HORIZON_CONFIG
 
     @property
-    def dashboards(self):
+    def dashboards(self):#返回dashboard对应的值
         return self._conf['dashboards']
 
     @property
-    def default_dashboard(self):
+    def default_dashboard(self):#返回默认的dashboard的值
         return self._conf['default_dashboard']
 
-    def register(self, dashboard):
+    def register(self, dashboard):#注册dashboard
         """Registers a :class:`~horizon.Dashboard` with Horizon."""
         return self._register(dashboard)
 
-    def unregister(self, dashboard):
+    def unregister(self, dashboard):#不注册dashboard
         """Unregisters a :class:`~horizon.Dashboard` from Horizon."""
         return self._unregister(dashboard)
 
-    def registered(self, dashboard):
+    def registered(self, dashboard):#返回dashboard的注册类
         return self._registered(dashboard)
 
-    def register_panel(self, dashboard, panel):
+    def register_panel(self, dashboard, panel):#注册panel
         dash_instance = self.registered(dashboard)
         return dash_instance._register(panel)
 
@@ -809,7 +809,7 @@ class Site(Registry, HorizonComponent):
                              'or a callable object (e.g. a function).')
         else:
             return self.get_absolute_url() #返回绝对URL
-    def get_absolute_url(self):
+    def get_absolute_url(self):#返回相对url
         """Returns the default URL for Horizon's URLconf.
 
         The default URL is determined by calling
@@ -819,7 +819,7 @@ class Site(Registry, HorizonComponent):
         """
         return self.get_default_dashboard().get_absolute_url()
 
-    @property
+    @property#把方法变成属性调用
     def _lazy_urls(self):
         """Lazy loading for URL patterns.
 
@@ -836,11 +836,11 @@ class Site(Registry, HorizonComponent):
         urlpatterns = self._get_default_urlpatterns()
         self._autodiscover()
 
-        # Discover each dashboard's panels.
+        # Discover each dashboard's panels.寻找每个dashboard的panel
         for dash in self._registry.values():
             dash._autodiscover()
 
-        # Load the plugin-based panel configuration
+        # Load the plugin-based panel configuration加载基于插件的面板配置
         self._load_panel_customization()
 
         # Allow for override modules
